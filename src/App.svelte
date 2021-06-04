@@ -309,13 +309,13 @@
     console.log("Adding DataSet to DLT")
     let t0 = performance.now();
     for(var i=0; i<gen_final.length; i++){
-      // await add_to_blockchain(JSON.stringify(gen_final[i])) //FOR ADDING TO BLOCKCHAIN
-      const message = await client.message()
-        .index('Health Records PoC')
-        .data(JSON.stringify(gen_final[i]))
-        .submit();
+      await add_to_blockchain(JSON.stringify(gen_final[i])) //FOR ADDING TO BLOCKCHAIN
+    //   const message = await client.message()
+    //     .index('Health Records PoC')
+    //     .data(JSON.stringify(gen_final[i]))
+    //     .submit();
 
-    console.log(message);
+    // console.log(message);
 
     }
     let t1 = performance.now();
