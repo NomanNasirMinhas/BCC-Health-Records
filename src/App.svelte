@@ -15,7 +15,7 @@
   const unsubscribe = bcc_data.subscribe(value => {
 		chart_data = value;
 	});
-  const { ClientBuilder } = require('@iota/client');
+  // const { ClientBuilder } = require('@iota/client');
 
   let raw_data_local = [];
   let clean_data = [];
@@ -27,12 +27,12 @@
   console.log("Ciphers ", ciphers_list);
   const Web3 = require("web3");
   const mongodb = require("mongodb").MongoClient;
-  const contract = require("truffle-contract");
+  const contract = require("@truffle/contract");
   const artifacts = require("./../build/contracts/Inbox.json");
   const uri =
     "mongodb://localhost:27017/?readPreference=primary&appname=MongoDB%20Compass&ssl=false";
-  const IPFS = require("ipfs-api");
-  const ipfs = IPFS({ host: "ipfs.infura.io", port: 5001, protocol: "https" });
+  const IPFS = require("ipfs-http-client");
+  const ipfs = IPFS.create(new URL("https://ipfs.infura.io:5001"));
   if (typeof web3 !== "undefined") {
     var web3 = new Web3(web3.currentProvider);
   } else {
@@ -212,8 +212,9 @@
     const lms = await LMS.deployed();
     let id = uuidv4();
     var buffer = Buffer.from(data, "utf8");
-    let ipfsHash = await ipfs.add(buffer);
-    let hash = ipfsHash[0].hash;
+    let {cid} = await ipfs.add(buffer);
+    console.log("Result = ", cid);
+    let hash = cid.string;
     lms
       .sendIPFS(id, hash, { from: accounts[0] })
       .then((_hash, _address) => {
@@ -248,10 +249,10 @@
           mongo_data.map((value, i) => {
             let t0 = performance.now();
             lms.getHash(value.id, { from: accounts[0] }).then(async (hash) => {
-              let data = await ipfs.files.get(hash);
-              data = data[0].content.toString();
-          // console.log("ipfs Data = ", data);
-              raw_data_local = [...raw_data_local, JSON.parse(data)];
+              let data = await fetch(`https://ipfs.infura.io/ipfs/${hash}`);
+              data = await data.json();
+          console.log("ipfs Data = ", data);
+              raw_data_local = [...raw_data_local, data];
               let t1 = performance.now();
               bcc_data.update(v=> [...v, {
               "group": "Fetch From Blockchain",
@@ -547,7 +548,7 @@ async function clean_dataset(){
   <div>
     <div style="width: 95%; display: inline-block;">
       <div class="actor-container">
-        <h2 style="text-align: center;">Performance Graph</h2>
+        <h2 style="text-align: center;">Bulk Testing</h2>
         <button on:click={async ()=> await handle_send_file()}>Test with Dataset</button>
       </div>
     </div>
